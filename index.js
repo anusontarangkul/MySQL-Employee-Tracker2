@@ -35,7 +35,7 @@ const startDirectory = () => {
 }
 
 const viewAllDepartments = () => {
-    const sql = 'SELECT * FROM department'
+    const sql = 'SELECT * FROM department';
     db.query(sql, (err, result) => {
         if (err) throw err;
         console.table(result);
@@ -44,15 +44,29 @@ const viewAllDepartments = () => {
 }
 
 const viewAllRoles = () => {
-    const sql = 'SELECT * FROM role'
+    const sql = 'SELECT * FROM role';
     db.query(sql, (err, result) => {
         if (err) throw err;
         console.table(result);
         startDirectory();
     })
 }
-
-const viewAllEmployees = () => { }
+// THEN I am presented with a formatted table showing employee data,  job titles, departments, salaries, and managers that the employees report to
+const viewAllEmployees = () => {
+    const sql = `SELECT employee.id, employee.first_name, employee.last_name, CONCAT(manager.first_name," ",manager.last_name) AS manager, role.salary, role.title, department.name AS department
+                FROM employee
+                LEFT JOIN role
+                ON employee.role_id = role.id
+                LEFT JOIN department
+                ON role.department_id = department.id
+                LEFT JOIN employee manager
+                ON employee.manager_id = manager.id`;
+    db.query(sql, (err, result) => {
+        if (err) throw err;
+        console.table(result);
+        startDirectory();
+    })
+}
 
 const addRole = () => { }
 
