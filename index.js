@@ -67,12 +67,52 @@ const viewAllEmployees = () => {
         startDirectory();
     })
 }
+// id, title, salary, department_id
 
-const addRole = () => { }
+const addRole = () => {
+    const sql = 'SELECT name FROM department';
+    let roleArray = [];
+    db.query(sql, (err, result) => {
+        if (err) throw err;
+        for (let dept of result) {
+            roleArray.push(dept.name)
+        }
+    })
+    inquirer
+        .prompt([
+            {
+                type: 'text',
+                name: 'title',
+                message: 'What is the title of the role?',
+                validate: function (input) {
+                    return input ? true : false;
+                }
+            },
+            {
+                type: 'text',
+                name: 'salary',
+                message: 'What is the salary of the role?',
+                validate: function (input) {
+                    return (!isNaN(input) && input) ? true : false;
+                }
+            },
+            {
+                type: 'list',
+                name: 'department',
+                message: "What is the department of the role?",
+                choices: roleArray
+            }
+        ]).then(data => {
+            console.log(data)
+            const params = [data.title, data.salary, data.department]
+        })
+}
 
 const addEmployee = () => { }
 
 const updateEmployeeRole = () => { }
 
-
-startDirectory()
+const findDepartmentID = (department) => {
+    const sql = 'SELECT name FROM department WHERE ';
+}
+startDirectory();
