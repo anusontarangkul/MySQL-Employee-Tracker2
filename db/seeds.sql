@@ -4,6 +4,11 @@ INSERT INTO department
 VALUES
     ('Finance');
 
+INSERT INTO department
+    (name)
+VALUES
+    ('HR');
+
 INSERT INTO role
     (title, salary, department_id)
 VALUES

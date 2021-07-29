@@ -38,6 +38,7 @@ const viewAllDepartments = () => {
     const sql = 'SELECT * FROM department';
     db.query(sql, (err, result) => {
         if (err) throw err;
+        console.log(result)
         console.table(result);
         startDirectory();
     })
@@ -70,12 +71,14 @@ const viewAllEmployees = () => {
 // id, title, salary, department_id
 
 const addRole = () => {
-    const sql = 'SELECT name FROM department';
-    let roleArray = [];
+    const sql = 'SELECT * FROM department';
+    let roleNameArray = [];
+    let allDeptArray = [];
     db.query(sql, (err, result) => {
         if (err) throw err;
         for (let dept of result) {
-            roleArray.push(dept.name)
+            roleNameArray.push(dept.name)
+            allDeptArray.push(dept)
         }
     })
     inquirer
@@ -100,11 +103,25 @@ const addRole = () => {
                 type: 'list',
                 name: 'department',
                 message: "What is the department of the role?",
-                choices: roleArray
+                choices: roleNameArray
             }
         ]).then(data => {
-            console.log(data)
-            const params = [data.title, data.salary, data.department]
+            let paramsDeptID = 0
+            for (let i = 0; i < allDeptArray.length; i++) {
+                if (allDeptArray[i].name === data.department) {
+                    paramsDeptID = allDeptArray[i].id;
+                }
+            }
+            const params = [data.title, data.salary, paramsDeptID]
+            const sql = `INSERT INTO role (title, salary, department_id) VALUES (?,?,?)`;
+            db.query(sql, params, function (err, result) {
+                if (err) {
+                    ressult.status(400).json({ error: err.message });
+                    return;
+                }
+                console.log(data.title + " has been added.")
+                startDirectory();
+            })
         })
 }
 
