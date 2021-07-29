@@ -12,11 +12,13 @@ VALUES
 INSERT INTO role
     (title, salary, department_id)
 VALUES
-    ('analyst' , 60000, 1);
+    ('analyst' , 60000, 7),
+    ('recruiter', 50000, 8),
+    ('intern', 10000, 7);
 
 INSERT INTO employee
     (first_name, last_name, role_id, manager_id)
 VALUES
-    ('Ben', 'Sharp', 1, NULL),
-    ('Junior', 'test', 1, 1);
+
+    ('Becca', 'Nice', 17, 11);
 

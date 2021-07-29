@@ -44,7 +44,7 @@ const viewAllDepartments = () => {
     })
 }
 
-const viewAllRoles = () => {
+function viewAllRoles() {
     const sql = 'SELECT * FROM role';
     db.query(sql, (err, result) => {
         if (err) throw err;
@@ -125,11 +125,160 @@ const addRole = () => {
         })
 }
 
-const addEmployee = () => { }
+async function addEmployee() {
+    const allRoles = await findRole_return();
+    const allManagers = await findManager_return();
+    const allEmployees = await viewAllEmployee_Return();
 
-const updateEmployeeRole = () => { }
+    let roleArray = []
 
-const findDepartmentID = (department) => {
-    const sql = 'SELECT name FROM department WHERE ';
+    for (let role of allRoles) {
+        roleArray.push(role.title)
+    }
+
+
+    inquirer
+        .prompt([
+            {
+                type: 'text',
+                name: 'first_name',
+                message: "What is the employee's first name?",
+                validate: function (input) {
+                    return input ? true : false;
+                }
+            },
+            {
+                type: 'text',
+                name: 'last_name',
+                message: "What is the employee's last name?",
+                validate: function (input) {
+                    return input ? true : false;
+                }
+            },
+            {
+                type: 'list',
+                name: 'managerChoice',
+                message: "Who is the manager?",
+                choices: allManagers
+            },
+            {
+                type: 'list',
+                name: 'roleChoice',
+                message: "What is the employee's role?",
+                choices: roleArray
+            }
+        ]).then(data => {
+            let paramsRole = 0;
+            let paramsManagerID = 0;
+            // Looping through roles to match role name with role id
+            for (let i = 0; i < allRoles.length; i++) {
+                console.log(allRoles[i].title)
+                if (allRoles[i].title === data.roleChoice) {
+                    paramsRole = allRoles[i].id;
+                }
+            }
+
+            // Looping through employee to match manager name with mangager id
+            for (let i = 0; i < allEmployees.length; i++) {
+                if (allEmployees[i].manager === data.managerChoice) {
+                    paramsManagerID = allEmployees[i].id;
+                }
+            }
+
+            const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES (?,?,?, ?)`;
+            const params = [data.first_name, data.last_name, paramsRole, paramsManagerID];
+            db.query(sql, params, (err, result) => {
+                if (err) {
+                    result.status(400).json({ error: err.message });
+                    return;
+                }
+                console.log(`${data.first_name} ${data.last_name} has been added as an employee.`)
+                startDirectory();
+            })
+        })
 }
+
+
+
+
+const updateEmployeeRole = async () => {
+    const employeeArray = await viewEmployee_UpdateRole();
+    console.log(employeeArray)
+}
+
+
+const findRole_return = () => {
+    return new Promise(resolve => {
+        const sql1 = 'SELECT * FROM role';
+        // let roleNameArray = [];
+        db.query(sql1, (err, result) => {
+            if (err) throw err;
+            resolve(result)
+            // console.log(result)
+            // for (let role of result) {
+
+            //     roleNameArray.push(role.title)
+
+            // }
+            // resolve(roleNameArray)
+
+        })
+
+    })
+
+}
+
+const findManager_return = () => {
+    return new Promise(resolve => {
+        let managerChoice = [];
+        let map = {}
+        const sql = `SELECT CONCAT(manager.first_name," ",manager.last_name) AS manager
+                     FROM employee
+                     LEFT JOIN employee manager
+                     ON employee.manager_id = manager.id`;
+        db.query(sql, (err, result) => {
+            if (err) throw err;
+            for (let managerObj of result) {
+                if (managerObj.manager !== null) {
+                    map[managerObj.manager] = true;
+
+                }
+            }
+            for (let key in map) {
+                managerChoice.push(key)
+
+            }
+            resolve(managerChoice)
+
+        })
+    })
+}
+
+const viewAllEmployee_Return = () => {
+    return new Promise(resolve => {
+        const sql = `SELECT employee.id, CONCAT(manager.first_name," ",manager.last_name) AS manager
+                    FROM employee
+                    LEFT JOIN employee manager
+                    ON employee.manager_id = manager.id`;
+        db.query(sql, (err, result) => {
+            if (err) throw err;
+            resolve(result)
+        })
+    })
+}
+
+const viewEmployee_UpdateRole = () => {
+    return new Promise(resolve => {
+        const sql = `SELECT CONCAT(employee.first_name," ",employee.last_name) AS name
+                    FROM employee
+                    `;
+        db.query(sql, (err, result) => {
+            if (err) throw err;
+            resolve(result)
+        })
+    })
+}
+
+
+// findRole_AddEmployee()
 startDirectory();
