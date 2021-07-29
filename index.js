@@ -202,30 +202,76 @@ async function addEmployee() {
 
 
 const updateEmployeeRole = async () => {
-    const employeeArray = await viewEmployee_UpdateRole();
-    console.log(employeeArray)
+
+    // Create array of full names of employees
+    const employeeAllArray = await viewEmployee_UpdateRole();
+
+    let employeeChoiceArray = [];
+    for (let employee of employeeAllArray) {
+        employeeChoiceArray.push(employee.name)
+    }
+
+    // Create array of roles
+    const roleAllArray = await viewRoles_UpdateRole();
+    console.log(roleAllArray)
+    let roleChoiceArray = [];
+    for (let role of roleAllArray) {
+        roleChoiceArray.push(role.title)
+    }
+
+
+    inquirer
+        .prompt([
+            {
+                type: 'list',
+                name: 'employeeChoice',
+                message: 'Which employee would you like to update?',
+                choices: employeeChoiceArray
+            },
+            {
+                type: 'list',
+                name: 'roleChoice',
+                message: 'What is the new role?',
+                choices: roleChoiceArray
+            }
+        ]).then(data => {
+
+
+
+            // match the role ID with role title
+            let roleIdParam;
+            for (let role of roleAllArray) {
+                if (role.title === data.roleChoice) {
+                    roleIdParam = role.id
+                }
+            }
+            let firstNameChoice = data.employeeChoice;
+            firstNameChoice = firstNameChoice.split(/(\s+)/);
+            firstNameChoice = firstNameChoice[0]
+
+            const sql = `UPDATE employee SET role_id = ? WHERE first_name = ?`;
+            const params = [roleIdParam, firstNameChoice];
+
+            db.query(sql, params, (err, result) => {
+                if (err) {
+                    result.status(400).json({ error: err.message });
+                    return;
+                }
+                console.log(`${data.employeeChoice} has updated the role to ${data.roleChoice}`)
+                startDirectory();
+            })
+        })
 }
 
 
 const findRole_return = () => {
     return new Promise(resolve => {
         const sql1 = 'SELECT * FROM role';
-        // let roleNameArray = [];
         db.query(sql1, (err, result) => {
             if (err) throw err;
             resolve(result)
-            // console.log(result)
-            // for (let role of result) {
-
-            //     roleNameArray.push(role.title)
-
-            // }
-            // resolve(roleNameArray)
-
         })
-
     })
-
 }
 
 const findManager_return = () => {
@@ -279,6 +325,17 @@ const viewEmployee_UpdateRole = () => {
     })
 }
 
+const viewRoles_UpdateRole = () => {
+    return new Promise(resolve => {
+        const sql = `SELECT id, title
+                    FROM role
+                    `;
+        db.query(sql, (err, result) => {
+            if (err) throw err;
+            resolve(result)
+        })
+    })
 
-// findRole_AddEmployee()
+}
+
 startDirectory();
